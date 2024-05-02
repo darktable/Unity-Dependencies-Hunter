@@ -1043,16 +1043,24 @@ namespace DependenciesHunter
     {
         public static void FillReverseDependenciesMap(out Dictionary<string, List<string>> reverseDependencies)
         {
-            var assetPaths = AssetDatabase.GetAllAssetPaths().ToList();
+            var assetPaths = AssetDatabase.GetAllAssetPaths();
 
-            reverseDependencies = assetPaths.ToDictionary(assetPath => assetPath, assetPath => new List<string>());
+            reverseDependencies = new Dictionary<string, List<string>>();
 
-            Debug.Log($"Total Assets Count: {assetPaths.Count}");
+            foreach (var assetPath in assetPaths)
+            {
+                if (!reverseDependencies.TryAdd(assetPath, new List<string>()))
+                {
+                    Debug.LogWarning($"Duplicate key in assetPaths: {assetPath}");
+                }
+            }
 
-            for (var i = 0; i < assetPaths.Count; i++)
+            Debug.Log($"Total Assets Count: {assetPaths.Length}");
+
+            for (var i = 0; i < assetPaths.Length; i++)
             {
                 EditorUtility.DisplayProgressBar("Dependencies Hunter", "Creating a map of dependencies",
-                    (float) i / assetPaths.Count);
+                    (float) i / assetPaths.Length);
 
                 var assetDependencies = AssetDatabase.GetDependencies(assetPaths[i], false);
 
